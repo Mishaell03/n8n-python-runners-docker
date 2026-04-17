@@ -1,0 +1,40 @@
+services:
+  n8n:
+    image: n8nio/n8n:1.121.0
+    container_name: n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - TZ=Europe/Berlin
+      - GENERIC_TIMEZONE=Europe/Berlin
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+      - N8N_RUNNERS_ENABLED=true
+      - N8N_RUNNERS_MODE=external
+      - N8N_RUNNERS_BROKER_LISTEN_ADDRESS=0.0.0.0
+      - N8N_RUNNERS_AUTH_TOKEN=super-secret-token
+      - N8N_NATIVE_PYTHON_RUNNER=true
+    volumes:
+      - n8n_data:/home/node/.n8n
+
+  runners:
+    build:
+      context: ./runners
+      dockerfile: Dockerfile
+    container_name: n8n-runners
+    restart: unless-stopped
+    environment:
+      - N8N_RUNNERS_TASK_BROKER_URI=http://n8n:5679
+      - N8N_RUNNERS_AUTH_TOKEN=super-secret-token
+      - N8N_RUNNERS_AUTO_SHUTDOWN_TIMEOUT=15
+      - N8N_RUNNERS_LAUNCHER_HEALTH_CHECK_PORT=5680
+      - GENERIC_TIMEZONE=Europe/Berlin
+      - TZ=Europe/Berlin
+    depends_on:
+      - n8n
+
+volumes:
+  n8n_data:
